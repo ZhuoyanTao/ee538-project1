@@ -64,6 +64,8 @@ int get_majority_friend_opinions(int node)
             }
         }
     }
+    if (cnt0 + cnt1 == 0)
+        return opinions[node];
     if (cnt1 > cnt0)
         return 1;
     return 0;
@@ -76,6 +78,7 @@ bool update_opinions()
     bool changed = false;
     for (int i = 0; i < total_nodes; ++i)
     {
+
     int maj = get_majority_friend_opinions(i);
         if (maj != opinions[i])
         {
