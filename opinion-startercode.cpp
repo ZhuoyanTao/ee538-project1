@@ -6,11 +6,10 @@ using namespace std;
 /********************DO NOT EDIT**********************/
 // Function prototype. Defined later.
 void read_opinions(string filename); // reads file into opinions vector and updates total_nodes as needed
-void read_edges(string filename); // reads file into edge_list, defined later
-void build_adj_matrix(); // convert edge_list to adjacency matrix
-
-int total_nodes = 0; // We keep track of the total number of nodes based on largest node id.
-
+void read_edges(string filename);    // reads file into edge_list, defined later
+void build_adj_matrix();             // convert edge_list to adjacency matrix
+void build_adj_list();               // convert edge_list to adjacency list
+int total_nodes = 0;                 // We keep track of the total number of nodes based on largest node id.
 
 /****************************************************************/
 
@@ -24,9 +23,21 @@ std::vector<std::vector<int>> adj;
 // edge list: each row contains {source, target}
 std::vector<std::vector<int>> edge_list;
 
+// build adjacency list instead of adj matrix
+void build_adj_list()
+{
+    adj.assign(total_nodes, vector<int>()); // O(N), not O(N²)
+    for (int i = 0; i < (int)edge_list.size(); ++i)
+    {
+        int source = edge_list[i][0];
+        int dest = edge_list[i][1];
+        adj[dest].push_back(source); // store in-neighbors of dest
+    }
+}
+
 void build_adj_matrix()
 {
-    adj = vector<vector<int>> (total_nodes, vector<int>(total_nodes, 0));
+    adj = vector<vector<int>>(total_nodes, vector<int>(total_nodes, 0));
     for (int i = 0; i < edge_list.size(); ++i)
     {
         int source = edge_list[i][0];
@@ -37,32 +48,25 @@ void build_adj_matrix()
 
 double calculate_fraction_of_ones()
 {
-   int cnt = 0;
+    int cnt = 0;
     for (int i = 0; i < total_nodes; ++i)
     {
-        if (opinions[i] == 1) ++cnt;
+        if (opinions[i] == 1)
+            ++cnt;
     }
     return static_cast<double>(cnt) / total_nodes;
 }
 
-// For a given node, count majority opinion among its neighbours. Tie -> 0.
+// for inner loop, change to count from adj list instead of matrix
 int get_majority_friend_opinions(int node)
 {
-    int cnt0 = 0;
-    int cnt1 = 0;
-    for (int i = 0; i < total_nodes; ++i)
+    int cnt0 = 0, cnt1 = 0;
+    for (int neighbor : adj[node]) // only actual in-neighbors
     {
-        if (adj[i][node] == 1)
-        {
-            if (opinions[i] == 0)
-            {
-                ++cnt0;
-            }
-            else
-            {
-                ++cnt1;
-            }
-        }
+        if (opinions[neighbor] == 0)
+            ++cnt0;
+        else
+            ++cnt1;
     }
     if (cnt0 + cnt1 == 0)
         return opinions[node];
@@ -79,10 +83,10 @@ bool update_opinions()
     for (int i = 0; i < total_nodes; ++i)
     {
 
-    int maj = get_majority_friend_opinions(i);
+        int maj = get_majority_friend_opinions(i);
         if (maj != opinions[i])
         {
-           new_opinions[i] = maj;
+            new_opinions[i] = maj;
             changed = true;
         }
     }
@@ -90,27 +94,28 @@ bool update_opinions()
     return changed;
 }
 
-int main() {
+int main()
+{
     // no preallocation; vectors grow on demand
 
     // Read input files
-    read_opinions("opinions.txt"); 
+    read_opinions("opinions.txt");
     read_edges("edge_list.txt");
 
     // convert edge list into adjacency matrix once we know total_nodes
     build_adj_matrix();
-    
+
     cout << "Total nodes: " << total_nodes << endl;
-    
+
     // Run simulation
     int max_iterations = 30;
     int iteration = 0;
     bool opinions_changed = true;
-    
+
     // Print initial state
-    cout << "Iteration " << iteration << ": fraction of 1's = " 
+    cout << "Iteration " << iteration << ": fraction of 1's = "
          << calculate_fraction_of_ones() << endl;
-    
+
     /// (6)  //////////////////////////////////////////////
     while (iteration < max_iterations && opinions_changed)
     {
@@ -125,31 +130,31 @@ int main() {
     ////////////////////////////////////////////////////////
     // Print final result
     double final_fraction = calculate_fraction_of_ones();
-    cout << "Iteration " << iteration << ": fraction of 1's = " 
+    cout << "Iteration " << iteration << ": fraction of 1's = "
          << final_fraction << endl;
-    
-    if(final_fraction == 1.0)
+
+    if (final_fraction == 1.0)
         cout << "Consensus reached: all 1's" << endl;
-    else if(final_fraction == 0.0)
+    else if (final_fraction == 0.0)
         cout << "Consensus reached: all 0's" << endl;
     else
         cout << "No consensus reached after " << iteration << " iterations" << endl;
-    
+
     return 0;
 }
 
-
-/*********** Functions to read files **************************/ 
+/*********** Functions to read files **************************/
 
 // Read opinion vector from file.
 void read_opinions(string filename)
 {
     ifstream file(filename);
     int id, opinion;
-    while(file >> id >> opinion)
+    while (file >> id >> opinion)
     {
         opinions.push_back(opinion);
-        if(id >= total_nodes) total_nodes = id+1;
+        if (id >= total_nodes)
+            total_nodes = id + 1;
     }
     file.close();
 }
@@ -159,12 +164,14 @@ void read_edges(string filename)
 {
     ifstream file(filename);
     int source, target;
-    
-    while(file >> source >> target)
+
+    while (file >> source >> target)
     {
         edge_list.push_back({source, target});
-        if(source >= total_nodes) total_nodes = source+1;
-        if(target >= total_nodes) total_nodes = target+1;
+        if (source >= total_nodes)
+            total_nodes = source + 1;
+        if (target >= total_nodes)
+            total_nodes = target + 1;
     }
     file.close();
 }
