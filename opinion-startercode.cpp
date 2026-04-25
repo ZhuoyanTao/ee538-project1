@@ -8,11 +8,11 @@ using namespace std;
 void read_opinions(string filename); // reads file into opinions vector and updates total_nodes as needed
 void read_edges(string filename);    // reads file into edge_list, defined later
 void build_adj_matrix();             // convert edge_list to adjacency matrix
-void build_adj_list();               // convert edge_list to adjacency list
+                                     // convert edge_list to adjacency list
 int total_nodes = 0;                 // We keep track of the total number of nodes based on largest node id.
 
 /****************************************************************/
-
+void build_adj_list();
 /******** Create adjacency matrix and vector of opinions */
 // simple vector to hold each node's opinion (0 or 1)
 std::vector<int> opinions;
@@ -103,7 +103,8 @@ int main()
     read_edges("edge_list.txt");
 
     // convert edge list into adjacency matrix once we know total_nodes
-    build_adj_matrix();
+    // build_adj_matrix();
+    build_adj_list();
 
     cout << "Total nodes: " << total_nodes << endl;
 
